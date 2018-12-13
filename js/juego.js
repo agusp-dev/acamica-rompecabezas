@@ -6,6 +6,13 @@ var instrucciones = [
 // Arreglo para ir guardando los movimientos que se vayan realizando
 var movimientos = [];
 
+//Grilla ganadora utilizada para comparar si el usuario gano.
+var grillaGanadora = [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9]
+];
+
 // Representación de la grilla. Cada número representa a una pieza.
 // El 9 es la posición vacía
 var grilla = [
@@ -31,16 +38,28 @@ function mostrarInstrucciones(instrucciones) {
 
 /* COMPLETAR: Crear función que agregue la última dirección al arreglo de movimientos
 y utilice actualizarUltimoMovimiento para mostrarlo en pantalla */
+function agregarMovimiento(movimiento) {
+  movimientos.push(movimiento);
+  actualizarUltimoMovimiento(movimiento);
+}
 
 /* Esta función va a chequear si el Rompecabezas esta en la posicion ganadora. 
 Existen diferentes formas de hacer este chequeo a partir de la grilla. */
 function chequearSiGano() {
-    //COMPLETAR
+  for (var i = 0; i < grilla.length; i++) {
+    for (var j = 0; j < grilla.length; j++) {
+      if (grilla[i][j] != grillaGanadora[i][j]) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 // Implementar alguna forma de mostrar un cartel que avise que ganaste el juego
 function mostrarCartelGanador() {
-    //COMPLETAR
+    alert("Rompecabezas finalizado");
+    //todo crear un cartel mejor.
 }
 
 /* Función que intercambia dos posiciones en la grilla.
