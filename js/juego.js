@@ -72,19 +72,26 @@ arreglo[0][0] = arreglo[1][2];
 En vez de intercambiar esos valores vamos a terminar teniendo en ambas posiciones el mismo valor.
 Se te ocurre cómo solucionar esto con una variable temporal?
 */
-function intercambiarPosicionesGrilla(filaPos1, columnaPos1, filaPos2, columnaPos2) {
-    //COMPLETAR
+function intercambiarPosicionesGrilla(filaPos1, columnaPos1, filaPos2, columnaPos2, pieza1, pieza2) {
+  grilla[filaPos2][columnaPos2] = pieza1;
+  grilla[filaPos1][columnaPos1] = pieza2;
 }
 
 // Actualiza la posición de la pieza vacía
 function actualizarPosicionVacia(nuevaFila, nuevaColumna) {
-    //COMPLETAR
+    filaVacia = nuevaFila;
+    columnaVacia = nuevaColumna;
 }
 
 
 // Para chequear si la posicón está dentro de la grilla.
 function posicionValida(fila, columna) {
-    //COMPLETAR
+  //Se presupone que la grilla es una matriz cuadrada
+  if (fila >= 0 && fila < grilla.length && 
+    columna >= 0 && columna < grilla[fila].length) {
+      return true;
+  }
+  return false;
 }
 
 /* Movimiento de fichas, en este caso la que se mueve es la blanca intercambiando su posición con otro elemento.
@@ -107,12 +114,14 @@ function moverEnDireccion(direccion) {
     
   // Mueve pieza hacia la derecha, reemplazandola con la blanca
   else if (direccion === codigosDireccion.DERECHA) {
-    //COMPLETAR
+    nuevaColumnaPiezaVacia = columnaVacia - 1;
+    nuevaFilaPiezaVacia = filaVacia;
   }
     
   // Mueve pieza hacia la izquierda, reemplazandola con la blanca
   else if (direccion === codigosDireccion.IZQUIERDA) {
-    // COMPLETAR
+    nuevaColumnaPiezaVacia = columnaVacia + 1;
+    nuevaFilaPiezaVacia = filaVacia;
   }
 
   /* A continuación se chequea si la nueva posición es válida, si lo es, se intercambia. 
@@ -123,8 +132,8 @@ function moverEnDireccion(direccion) {
         intercambiarPosiciones(filaVacia, columnaVacia, nuevaFilaPiezaVacia, nuevaColumnaPiezaVacia);
         actualizarPosicionVacia(nuevaFilaPiezaVacia, nuevaColumnaPiezaVacia);
 
-  //COMPLETAR: Agregar la dirección del movimiento al arreglo de movimientos
-
+      //COMPLETAR: Agregar la dirección del movimiento al arreglo de movimientos
+      agregarMovimiento(direccion);
     }
 }
 
@@ -159,9 +168,8 @@ function intercambiarPosiciones(fila1, columna1, fila2, columna2) {
   var pieza1 = grilla[fila1][columna1];
   var pieza2 = grilla[fila2][columna2];
 
-  intercambiarPosicionesGrilla(fila1, columna1, fila2, columna2);
+  intercambiarPosicionesGrilla(fila1, columna1, fila2, columna2, pieza1, pieza2);
   intercambiarPosicionesDOM('pieza' + pieza1, 'pieza' + pieza2);
-
 }
 
 /* Intercambio de posiciones de los elementos del DOM que representan
