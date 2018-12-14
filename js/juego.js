@@ -1,8 +1,7 @@
 // Arreglo que contiene las intrucciones del juego 
 var instrucciones = [
   "Utilizá las flechas de tu teclado para mover las piezas.", 
-  "Ordená las piezas hasta formar la imagen original.", 
-  "Antes de empezar, trata de imaginarte que imagen vas a formar."];
+  "Ordená las piezas hasta formar la imagen original."];
 // Arreglo para ir guardando los movimientos que se vayan realizando
 var movimientos = [];
 

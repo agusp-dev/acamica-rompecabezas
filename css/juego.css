@@ -19,11 +19,53 @@ li::before {
   color: #EC6778;
 }
 
-.col-40 h1 {
-  
-  font-size: 20px;
-  color: #E84A5F;
+#cabecera {
+  background-color: #182952;
+  padding: 16px;
 }
+
+#cabecera h1 {
+  margin: 0;
+  font-size: 24px;
+  text-align: center;
+  color: #fff;
+}
+
+#secciones {
+  padding: 30px;
+}
+
+#secciones h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+#secciones ul {
+  font-size: 16px;
+  color: #ddd;
+  margin-bottom: 24px;
+}
+
+#contenedor-objetivo {
+  width: 100%;
+}
+
+#contenedor-objetivo div {
+  margin-top: 24px;
+  width: 100%;
+  height: 200px;
+  text-align: center;
+}
+
+#contenedor-objetivo img {
+  width: 120px;
+  height: 120px;
+}
+
+
+
+
+
 
 .col-40, .col-60 {
   display: table-cell;
@@ -32,9 +74,8 @@ li::before {
 }
 .col-40 {
   /**background: #FFF;*/
-  background: green;
-  padding: 30px;
-  color: #000;
+  background: #2b3595;
+  color: #e14594;
 }
 
 .col-60 {
@@ -79,7 +120,7 @@ li::before {
 
 
 #juego {
-  background-color: gainsboro;
+  background-color: #e14594;
   width: 600px;
   height: 600px;
 }
