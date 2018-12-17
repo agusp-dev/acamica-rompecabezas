@@ -1,7 +1,8 @@
 // Arreglo que contiene las intrucciones del juego 
 var instrucciones = [
-  "Utilizá las flechas de tu teclado para mover las piezas.", 
-  "Ordená las piezas hasta formar la imagen original."];
+  "Utilizá las flechas de tu teclado para mover las piezas y formar la imagen objetivo", 
+  "Tenés un límite de 20 movimientos y 5 minutos para resolver el rompecabezas.",
+  "Presioná el botón 'Iniciar' para comenzar a jugar y 'Resetear' para volver a comenzar"];
 // Arreglo para ir guardando los movimientos que se vayan realizando
 var movimientos = [];
 
