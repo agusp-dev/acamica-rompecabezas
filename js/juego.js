@@ -18,6 +18,12 @@ var states = {
   ENDED: 2
 }
 
+/**
+ * Valores por defecto del tablero
+ */
+var remainingMovements;
+var remainingTime;
+
 //Grilla ganadora utilizada para comparar si el usuario gano.
 //grillaGanadora
 var winnerGrid = [
@@ -42,6 +48,15 @@ var emptyRow = 2;
 //columnaVacia
 var emptyColumn = 2;
 
+function initBoardValues() {
+  remainingMovements = 20;
+  remainingTime = 60;
+}
+
+function initMovementsArray() {
+  movements = [];
+}
+
 /* Esta función deberá recorrer el arreglo de instrucciones pasado por parámetro. 
 Cada elemento de este arreglo deberá ser mostrado en la lista con id 'lista-instrucciones'. 
 Para eso deberás usar la función ya implementada mostrarInstruccionEnLista().
@@ -59,8 +74,12 @@ y utilice actualizarUltimoMovimiento para mostrarlo en pantalla */
 //agregarMovimiento
 function addMovement(movement) {
   movements.push(movement);
-  //actualizarUltimoMovimiento
   updateLastMovement(movement);
+}
+
+function subtractMovement() {
+  remainingMovements--;
+  updateRemainingMovementsComponent();
 }
 
 /* Esta función va a chequear si el Rompecabezas esta en la posicion ganadora. 
@@ -122,7 +141,7 @@ function correctPosition(row, column) {
 /* Movimiento de fichas, en este caso la que se mueve es la blanca intercambiando su posición con otro elemento.
 Las direcciones están dadas por números que representa: arriba (38), abajo (40), izquierda (37), derecha (39) */
 //moverEnDireccion
-function moveInDirection(direction) {
+function moveInDirection(direction, isUserMovement) {
   /*
   var nuevaFilaPiezaVacia;
   var nuevaColumnaPiezaVacia;
@@ -159,13 +178,26 @@ function moveInDirection(direction) {
   las funciones posicionValida, intercambiarPosicionesGrilla y actualizarPosicionVacia */
 
     if (correctPosition(newEmptyRowItem, newEmptyColumnItem)) {
-        //changePositionsGrid
-        changePositions(emptyRow, emptyColumn, newEmptyRowItem, newEmptyColumnItem);
-        updateEmptyPosition(newEmptyRowItem, newEmptyColumnItem);
 
-      //COMPLETAR: Agregar la dirección del movimiento al arreglo de movimientos
-      addMovement(direction);
+        //Se verifica que el maximo de movimientos no se haya alcanzado
+        if (remainingMovements > 0) {
+
+          changePositions(emptyRow, emptyColumn, newEmptyRowItem, newEmptyColumnItem);
+          updateEmptyPosition(newEmptyRowItem, newEmptyColumnItem);
+          addMovement(direction);
+
+          if (isUserMovement) {
+            subtractMovement();  
+          }
+
+        } else {
+          lose();
+        }
     }
+}
+
+function showMaxMovementsAlert() {
+  alert("Límite máximo de movimientos alcanzado");
 }
 
 /**
@@ -179,6 +211,9 @@ function startButtonPressed() {
       start();
       break;
     case states.STARTED:
+      reset();
+      break;
+    case states.ENDED:
       reset();
       break;
   }
@@ -254,8 +289,10 @@ function changePositionsDOM(itemId1, itemId2) {
   padre.replaceChild(clonElemento1, elementoPieza2);
   padre.replaceChild(clonElemento2, elementoPieza1);
   */
+
  parent.replaceChild(itemClon1, item2);
  parent.replaceChild(itemClon2, item1);
+
 }
 
 /* Actualiza la representación visual del último movimiento 
@@ -306,7 +343,7 @@ function mixItems(count) {
 
   var direction = directions[Math.floor(Math.random() * directions.length)];
 
-  moveInDirection(direction);
+  moveInDirection(direction, false);
 
   setTimeout(function() {
       mixItems(count - 1);
@@ -326,7 +363,7 @@ function shotKeys() {
       event.which === directionCodes.RIGHT ||
       event.which === directionCodes.LEFT) {
 
-      moveInDirection(event.which);
+      moveInDirection(event.which, true);
 
         var won = checkIfWon();
         if (won) {
@@ -339,7 +376,76 @@ function shotKeys() {
     })
 }
 
+function stopShotKeys() {
+  document.body.onkeydown = null;
+}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function load() {
+  initBoardValues();
+  updateRemainingMovementsComponent();
+  updateRemainingTimeComponent();
+  showInstructions(instructions);
+  changePuzzleCurrentState(states.LOADED);
+}
+
+function start() {
+  mixItems(30);
+  shotKeys();
+  changePuzzleCurrentState(states.STARTED);
+}
+
+function reset() {
+  stopShotKeys();
+  initBoardValues();
+  resetMovements();
+  initMovementsArray();
+  updateRemainingMovementsComponent();
+  updateRemainingTimeComponent();
+  changePuzzleCurrentState(states.LOADED);
+}
+
+function lose() {
+  showMaxMovementsAlert();
+  changePuzzleCurrentState(states.ENDED);
+}
+
+function win() {
+  //todo
+}
+
+
+
+
+
+
+
+
+
+function updateRemainingMovementsComponent() {
+  var remainingMovementsComponent = document.getElementById('remaining-movements');
+  remainingMovementsComponent.value = remainingMovements;
+  remainingMovementsComponent.innerHTML = remainingMovements;
+}
+
+function updateRemainingTimeComponent() {
+  var remainingTimeComponent = document.getElementById('remaining-time');
+  remainingTimeComponent.value = remainingTime;
+  remainingTimeComponent.innerHTML = remainingTime;
+}
 
 
 function changePuzzleCurrentState(newState) {
@@ -363,32 +469,60 @@ function updateButtonText(newText) {
   button.innerHTML = newText;
 }
 
-/*
-function puzzleLoaded() {
-  puzzleCurrentState = states.LOADED;
-}
-function puzzleStarted() {
-}
-function puzzleEnded() {
-}
-*/
-
-function reset() {
-  changePuzzleCurrentState(states.LOADED);
-}
-
-function start() {
-    mixItems(30);
-    shotKeys();
-    changePuzzleCurrentState(states.STARTED);
-}
-
-/**
- * Punto de inicio.
- */
-function load() {
-  showInstructions(instructions);
-  changePuzzleCurrentState(states.LOADED);
-}
 
 load();
+
+
+
+
+/**
+ * Se vuelven atras todos los movimientos.
+ */
+function resetMovements() {
+  if (movements.length > 0) {
+    for (var m = movements.length; m > 0; m--) {
+      moveBack(movements[m-1]);
+    }
+  }
+}
+
+function moveBack(mov) {
+    var mBack;
+    switch (mov) {
+      case directionCodes.UP:
+        mBack = directionCodes.DOWN;
+        break;
+      case directionCodes.RIGHT:
+        mBack = directionCodes.LEFT;
+        break;
+      case directionCodes.DOWN:
+        mBack = directionCodes.UP;
+        break;
+      case directionCodes.LEFT:
+        mBack = directionCodes.RIGHT;
+        break;
+      default:
+        return;
+    }
+
+    moveInDirection(mBack, false);
+}
+
+
+
+
+
+/**
+ * Codigo comentado q podria ser util
+ */
+
+ /*
+function orderOriginalGrid() {
+  //originalGrid = winnerGrid.slice;
+  for (var i = 0; i < winnerGrid.length; i++) {
+    for (var j = 0; j < winnerGrid[i].length; j++) {
+      originalGrid[i][j] = winnerGrid[i][j];
+    }
+  }
+}
+*/
