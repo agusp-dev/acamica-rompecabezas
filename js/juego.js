@@ -8,6 +8,8 @@ var instructions = [
 //movimientos
 var movements = [];
 
+var timerId;
+
 /**
  * Variable que determina estado del juego para que pueda ser iniciado y reiniciado a traves del boton de accion.
  */
@@ -16,6 +18,11 @@ var states = {
   LOADED: 0,
   STARTED: 1,
   ENDED: 2
+}
+
+var loseReason = {
+  MOVEMENTS_LIMIT: 0,
+  TIME_END: 1
 }
 
 /**
@@ -50,7 +57,7 @@ var emptyColumn = 2;
 
 function initBoardValues() {
   remainingMovements = 20;
-  remainingTime = 60;
+  remainingTime = 15;
 }
 
 function initMovementsArray() {
@@ -80,6 +87,25 @@ function addMovement(movement) {
 function subtractMovement() {
   remainingMovements--;
   updateRemainingMovementsComponent();
+}
+
+function decrementSecond() {
+  if (remainingTime > 0) {
+    remainingTime--;
+    updateRemainingTimeComponent();
+  } else {
+    stopTimer();
+    lose(loseReason.TIME_END);
+  }
+  console.log(remainingTime);
+}
+
+function startTimer() {
+  timerId = setInterval(decrementSecond, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerId);
 }
 
 /* Esta función va a chequear si el Rompecabezas esta en la posicion ganadora. 
@@ -191,13 +217,17 @@ function moveInDirection(direction, isUserMovement) {
           }
 
         } else {
-          lose();
+          lose(loseReason.MOVEMENTS_LIMIT);
         }
     }
 }
 
-function showMaxMovementsAlert() {
+function showMovementsLimitAlert() {
   alert("Límite máximo de movimientos alcanzado");
+}
+
+function showTimeEndAlert() {
+  alert("Tiempo finalizado");
 }
 
 /**
@@ -403,6 +433,7 @@ function load() {
 }
 
 function start() {
+  startTimer();
   mixItems(30);
   shotKeys();
   changePuzzleCurrentState(states.STARTED);
@@ -410,6 +441,7 @@ function start() {
 
 function reset() {
   stopShotKeys();
+  stopTimer();
   initBoardValues();
   resetMovements();
   initMovementsArray();
@@ -418,8 +450,19 @@ function reset() {
   changePuzzleCurrentState(states.LOADED);
 }
 
-function lose() {
-  showMaxMovementsAlert();
+/**
+ * Funcion ejecutada cuando el usuario pierde.
+ * 0 -> 
+ */
+function lose(reason) {
+  switch (reason) {
+    case loseReason.MOVEMENTS_LIMIT:
+      showMovementsLimitAlert();
+      break;
+    case loseReason.TIME_END:
+      showTimeEndAlert();
+      break;
+  }
   changePuzzleCurrentState(states.ENDED);
 }
 
@@ -437,13 +480,11 @@ function win() {
 
 function updateRemainingMovementsComponent() {
   var remainingMovementsComponent = document.getElementById('remaining-movements');
-  remainingMovementsComponent.value = remainingMovements;
   remainingMovementsComponent.innerHTML = remainingMovements;
 }
 
 function updateRemainingTimeComponent() {
   var remainingTimeComponent = document.getElementById('remaining-time');
-  remainingTimeComponent.value = remainingTime;
   remainingTimeComponent.innerHTML = remainingTime;
 }
 
