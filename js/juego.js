@@ -8,6 +8,16 @@ var instructions = [
 //movimientos
 var movements = [];
 
+/**
+ * Variable que determina estado del juego para que pueda ser iniciado y reiniciado a traves del boton de accion.
+ */
+var puzzleCurrentState;
+var states = {
+  LOADED: 0,
+  STARTED: 1,
+  ENDED: 2
+}
+
 //Grilla ganadora utilizada para comparar si el usuario gano.
 //grillaGanadora
 var winnerGrid = [
@@ -158,6 +168,22 @@ function moveInDirection(direction) {
     }
 }
 
+/**
+ * Click en boton.
+ * Dependiendo el estado actual del juego (puzzleCurrentState),
+ * el boton permite iniciar y reiniciar el juego.
+ */
+function startButtonPressed() {
+  switch (puzzleCurrentState) {
+    case states.LOADED:
+      start();
+      break;
+    case states.STARTED:
+      reset();
+      break;
+  }
+}
+
 
 //////////////////////////////////////////////////////////
 ////////A CONTINUACIÓN FUNCIONES YA IMPLEMENTADAS.////////
@@ -270,9 +296,6 @@ se mezclará todo el tablero. */
 //mezclarPiezas
 function mixItems(count) {
 
-  console.log("mixItems");
-  console.log("count: " + count);
-
   if (count <= 0) {
     return;
   }
@@ -281,11 +304,7 @@ function mixItems(count) {
       directionCodes.RIGHT, directionCodes.LEFT
     ];
 
-  console.log("directions: " + directions);
-
   var direction = directions[Math.floor(Math.random() * directions.length)];
-
-  console.log("direction: " + direction);
 
   moveInDirection(direction);
 
@@ -320,14 +339,56 @@ function shotKeys() {
     })
 }
 
-/* Se inicia el rompecabezas mezclando las piezas 60 veces 
-y ejecutando la función para que se capturen las teclas que 
-presiona el usuario */
-function start() {
-    showInstructions(instructions);
-    mixItems(30);
-    shotKeys();
+
+
+
+function changePuzzleCurrentState(newState) {
+  puzzleCurrentState = newState;
+  switch (newState) {
+    case states.LOADED:
+      updateButtonText("Iniciar");
+      break;
+    case states.STARTED:
+      updateButtonText("Reiniciar");
+      break;
+    case states.ENDED:
+      updateButtonText("Volver a Jugar");
+      break;
+  }
 }
 
-// Ejecutamos la función iniciar
-start();
+function updateButtonText(newText) {
+  var button = document.getElementById('button-start');
+  button.value = newText;
+  button.innerHTML = newText;
+}
+
+/*
+function puzzleLoaded() {
+  puzzleCurrentState = states.LOADED;
+}
+function puzzleStarted() {
+}
+function puzzleEnded() {
+}
+*/
+
+function reset() {
+  changePuzzleCurrentState(states.LOADED);
+}
+
+function start() {
+    mixItems(30);
+    shotKeys();
+    changePuzzleCurrentState(states.STARTED);
+}
+
+/**
+ * Punto de inicio.
+ */
+function load() {
+  showInstructions(instructions);
+  changePuzzleCurrentState(states.LOADED);
+}
+
+load();
