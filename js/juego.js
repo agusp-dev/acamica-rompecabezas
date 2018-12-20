@@ -393,7 +393,9 @@ function shotKeys() {
       event.which === directionCodes.RIGHT ||
       event.which === directionCodes.LEFT) {
 
-      moveInDirection(event.which, true);
+        if (puzzleCurrentState != states.ENDED) {
+          moveInDirection(event.which, true);
+        }
 
         var won = checkIfWon();
         if (won) {
