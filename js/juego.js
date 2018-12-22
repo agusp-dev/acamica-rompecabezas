@@ -379,13 +379,13 @@ function userWon() {
  //Actualiza movimientos restantes en la UI. 
 function updateRemainingMovementsComponent() {
   var remainingMovementsComponent = document.getElementById('remaining-movements');
-  remainingMovementsComponent.innerHTML = remainingMovements;
+  remainingMovementsComponent.textContent = remainingMovements;
 }
 
 //Actualiza tiempo restante en la UI.
 function updateRemainingTimeComponent() {
   var remainingTimeComponent = document.getElementById('remaining-time');
-  remainingTimeComponent.innerHTML = remainingTime;
+  remainingTimeComponent.textContent = remainingTime;
 }
 
 /**
@@ -394,7 +394,7 @@ function updateRemainingTimeComponent() {
 function updateButtonText(newText) {
   var button = document.getElementById('button-start');
   button.value = newText;
-  button.innerHTML = newText;
+  button.textContent = newText;
 }
 
 function initLastMovement() {
