@@ -1,65 +1,105 @@
-// Arreglo que contiene las intrucciones del juego 
-//instrucciones
-var instructions = [
-  "Utilizá las flechas de tu teclado para mover las piezas y formar la imagen objetivo", 
-  "Tenés un límite de 20 movimientos y 5 minutos para resolver el rompecabezas.",
-  "Presioná el botón 'Iniciar' para comenzar a jugar y 'Resetear' para volver a comenzar"];
-// Arreglo para ir guardando los movimientos que se vayan realizando
-//movimientos
-var movements = [];
-
-var timerId;
 
 /**
- * Variable que determina estado del juego para que pueda ser iniciado y reiniciado a traves del boton de accion.
+ * Estados del juego.
+ * 
+ * 0 --> Cargado. Estado en el cual las variables son reestablecidas a sus valores iniciales,
+ *                para que el juego comience a iniciar nuevamente (al presionar sobre el boton 'iniciar').
+ * 
+ * 1 --> Iniciado. Estado al que se pasa luego de presionar sobre el boton 'Iniciar'. En este estado
+ *                 el juego se esta llevando a cabo.
+ * 
+ * 2 --> Detenido. Estado al que se llega luego de haber ganado o perdido.
  */
-var puzzleCurrentState;
 var states = {
   LOADED: 0,
   STARTED: 1,
   ENDED: 2
 }
 
+/**
+ * Razones de haber perdido el juego.
+ * 
+ * 0 --> Limite maximo de movimientos alcanzado.
+ * 1 --> Tiempo limite alcanzado.
+ */
 var loseReason = {
   MOVEMENTS_LIMIT: 0,
   TIME_END: 1
 }
 
-/**
- * Valores por defecto del tablero
- */
-var remainingMovements;
-var remainingTime;
+//Cantidad maxima de movimientos.
+var max_movements_acount = 20;
+//Cantidad maxima de segundos.
+var timer_count = 30;
 
-//Grilla ganadora utilizada para comparar si el usuario gano.
-//grillaGanadora
+/* codigosDireccion es un objeto que te permite reemplazar
+el uso de números confusos en tu código. Para referirte a la dir
+izquierda, en vez de usar el número 37, ahora podés usar:
+codigosDireccion.IZQUIERDA. Esto facilita mucho la lectura del código. 
+*/
+var directionCodes = {
+  LEFT: 37,
+  UP: 38,
+  RIGHT: 39,
+  DOWN: 40
+}
+
+//Limite de movimientos.
+var MAX_MOVEMENTS = 20;
+var MAX_TIME = 30;
+
+//Arreglo que contiene las intrucciones del juego 
+var instructions = [
+  "Utilizá las flechas de tu teclado para mover las piezas y formar la imagen objetivo", 
+  "Tenés un límite de 20 movimientos y 5 minutos para resolver el rompecabezas.",
+  "Presioná el botón 'Iniciar' para comenzar a jugar y 'Resetear' para volver a comenzar"];
+
+// Arreglo para ir guardando los movimientos que se vayan realizando
+var movements = [];
+
+//Matriz ganadora utilizada para comparar si el usuario gano.
 var winnerGrid = [
   [1, 2, 3],
   [4, 5, 6],
   [7, 8, 9]
 ];
 
-// Representación de la grilla. Cada número representa a una pieza.
-// El 9 es la posición vacía
-//grilla
+/**
+ * Representación de la grilla. Cada número representa a una pieza.
+ * El 9 es la posición vacía.
+ */
 var originalGrid = [
     [1, 2, 3],
     [4, 5, 6],
     [7, 8, 9]
 ];
 
-/* Estas dos variables son para guardar la posición de la pieza vacía. 
-Esta posición comienza siendo la [2, 2]*/
-//filaVacia
+/**
+ * Estas dos variables son para guardar la posición de la pieza vacía. 
+ * Esta posición comienza siendo la [2, 2]
+*/
 var emptyRow = 2;
-//columnaVacia
 var emptyColumn = 2;
 
-function initBoardValues() {
-  remainingMovements = 20;
-  remainingTime = 15;
+//Id de timer (setInterval). Se utiliza para poder detener el timer.
+var timerId;
+
+//Estado actual del juego.
+var puzzleCurrentState;
+
+//Cantidad de movimientos restantes.
+var remainingMovements;
+//Tiempo restante.
+var remainingTime;
+
+
+//Carga variables utilizadas en el tablero (panel derecho).
+function loadInitialBoardData() {
+  remainingMovements = MAX_MOVEMENTS;
+  remainingTime = MAX_TIME;
 }
 
+//Inicializa el array de movimientos.
 function initMovementsArray() {
   movements = [];
 }
@@ -68,53 +108,120 @@ function initMovementsArray() {
 Cada elemento de este arreglo deberá ser mostrado en la lista con id 'lista-instrucciones'. 
 Para eso deberás usar la función ya implementada mostrarInstruccionEnLista().
 Podés ver su implementación en la ultima parte de este codigo. */
-//mostrarInstrucciones
-function showInstructions(instrucciones) {
-    for (var i = 0; i < instrucciones.length; i++) {
-      //mostrarInstruccionEnLista
+function showInstructions(instructions) {
+    for (var i = 0; i < instructions.length; i++) {
       showInstructionsInList(instructions[i], "instructions-container");
     }
 }
 
 /* COMPLETAR: Crear función que agregue la última dirección al arreglo de movimientos
 y utilice actualizarUltimoMovimiento para mostrarlo en pantalla */
-//agregarMovimiento
 function addMovement(movement) {
   movements.push(movement);
   updateLastMovement(movement);
 }
 
-function subtractMovement() {
+//Elimina movimiento del array de movimientos y actualiza componente visual.
+function removeMovement() {
   remainingMovements--;
   updateRemainingMovementsComponent();
 }
 
-function decrementSecond() {
-  if (remainingTime > 0) {
-    remainingTime--;
-    updateRemainingTimeComponent();
-  } else {
-    stopTimer();
-    lose(loseReason.TIME_END);
-  }
-  console.log(remainingTime);
-}
-
+//Inicia timer. Este timer permite llevar una cuenta regresiva. Si MAX_TIME llega a 0, el jugador pierde.
 function startTimer() {
-  timerId = setInterval(decrementSecond, 1000);
+  timerId = setInterval(updateTimer, 1000);
 }
 
+//Detiene timer.
 function stopTimer() {
   clearInterval(timerId);
 }
 
+/**
+ * Esta funcion se ejecuta cada un segundo.
+ * Verifica si el juego ha finalizado (puzzleCurrentState). En este caso, solo detiene el timer y retorna.
+ * Verifica si el contador llego a 0. En este caso, indica que el juego a finalizado y el usuario ha perdido. Detiene el timer y retorna.
+ * En el caso de que estas dos validaciones sean falsas, resta un segundo a remainingTime y actualiza el componente visual.
+ */
+function updateTimer() {
+
+  if (puzzleCurrentState == states.ENDED) {
+    stopTimer();
+    return;
+  }
+
+  if (remainingTime <= 0) {
+    userLost(loseReason.TIME_END);
+    return;
+  }
+
+  remainingTime--;
+  updateRemainingTimeComponent();
+}
+
+/**
+ * Click en boton de inicio.
+ * 
+ * Dependiendo el estado actual del juego (puzzleCurrentState),
+ * el boton permite iniciar y reiniciar el juego.
+ */
+function startButtonPressed() {
+  switch (puzzleCurrentState) {
+    case states.LOADED:
+      start();
+      break;
+    case states.STARTED:
+      reset();
+      break;
+    case states.ENDED:
+      reset();
+      break;
+  }
+}
+
+/* capturarTeclas: Esta función captura las teclas presionadas por el usuario. Javascript
+permite detectar eventos, por ejemplo, cuando una tecla es presionada y en 
+base a eso hacer algo. No es necesario que entiendas como funciona esto ahora, 
+en el futuro ya lo vas a aprender. Por ahora, sólo hay que entender que cuando
+se toca una tecla se hace algo en respuesta, en este caso, un movimiento 
+*/
+function shotKeys() {
+  document.body.onkeydown = (function(event) {
+    if (event.which === directionCodes.DOWN ||
+      event.which === directionCodes.UP ||
+      event.which === directionCodes.RIGHT ||
+      event.which === directionCodes.LEFT) {
+
+       moveInDirection(event.which, true);
+
+        var won = checkIfWon();
+        if (won) {
+          setTimeout(function() {
+              userWon();
+              }, 500);
+            }
+            event.preventDefault();
+        }
+    })
+}
+
+//Detiene la escucha de teclas. Se utiliza cuando el usuario gano o perdio.
+function stopShotKeys() {
+  document.body.onkeydown = null;
+}
+
+
+/**
+ * VALIDACIONES ------------------------------------------------------------------------------------------------------------
+ */
+
 /* Esta función va a chequear si el Rompecabezas esta en la posicion ganadora. 
-Existen diferentes formas de hacer este chequeo a partir de la grilla. */
-//checkearSiGano
+Existen diferentes formas de hacer este chequeo a partir de la grilla.
+*/
 function checkIfWon() {
   for (var i = 0; i < originalGrid.length; i++) {
     for (var j = 0; j < originalGrid.length; j++) {
-      if (originalGrid[i][j] != winnerGrid[i][j]) {
+      if (originalGrid[i][j] !== winnerGrid[i][j]) {
         return false;
       }
     }
@@ -122,12 +229,235 @@ function checkIfWon() {
   return true;
 }
 
-// Implementar alguna forma de mostrar un cartel que avise que ganaste el juego
-//mostrarCartelGanador
-function showWinnerAlert() {
-    alert("Rompecabezas finalizado");
-    //todo crear un cartel mejor.
+// Para chequear si la posicón está dentro de la grilla.
+function correctPosition(row, column) {
+  //Se presupone que la grilla es una matriz cuadrada
+  if (row >= 0 && row < originalGrid.length && 
+    column >= 0 && column < originalGrid[row].length) {
+      return true;
+  }
+  return false;
 }
+
+
+/**
+ * Funcion de partida.
+ */
+load();
+
+/**
+ * FUNCIONES DE ESTADO ------------------------------------------------------------------------------------------------------
+ */
+
+/**
+ * Funcion que se ejecuta cuando se carga el juego.
+ * 
+ * Carga variables iniciales del tablero.
+ * Actualiza UI de tablero.
+ * Muestra instrucciones en UI.
+ * Cambia estado actual de juego a LOADED.
+ */
+function load() {
+  loadInitialBoardData();
+  updateRemainingMovementsComponent();
+  updateRemainingTimeComponent();
+  showInstructions(instructions);
+  changePuzzleCurrentState(states.LOADED);
+}
+
+/**
+ * Funcion que se ejecuta para dar inicio al juego.
+ * 
+ * Mezcla piezas.
+ * Inicia escucha de teclas.
+ * Inicia timer.
+ * Cambia estado actual de juego a STARTED.
+ */
+function start() {
+  mixItems(2);
+  shotKeys();
+  startTimer();
+  changePuzzleCurrentState(states.STARTED);
+}
+
+/**
+ * Funcion que se ejecuta para reiniciar el juego. 
+ * Esta funcion puede ser ejecutada en dos estados:
+ * a) Cuando el juego se encuentra activo (state: STARTED).
+ * b) Cuando el juego se encuentra finalizado (state: ENDED).
+ * 
+ * Detiene escucha de teclas.
+ * Detiene timer.
+ * Resetea variables iniciales de tablero.
+ * Vuelve atras todos los movimientos que se hicieron (tanto en la mezcla inicial de piezas como los hechos por el usuario).
+ * Resetea array de movimientos.
+ * Actualiza UI de movimientos pendientes.
+ * Actualiza UI de tiempo pendiente.
+ * Resetea componente de ultimo movimiento.
+ * Cambia estado actual del juego a LOADED.
+ */
+function reset() {
+  stopShotKeys();
+  stopTimer();
+  loadInitialBoardData();
+  resetMovements();
+  initMovementsArray();
+  updateRemainingMovementsComponent();
+  updateRemainingTimeComponent();
+  initLastMovement();
+  changePuzzleCurrentState(states.LOADED);
+}
+
+/**
+ * Funcion que modifica el estado actual de juego.
+ * Tambien modifica el texto del boton de accion, dependiendo el estado actual de juego.
+ */
+function changePuzzleCurrentState(newState) {
+  puzzleCurrentState = newState;
+  switch (newState) {
+    case states.LOADED:
+      updateButtonText("Iniciar");
+      break;
+    case states.STARTED:
+      updateButtonText("Reiniciar");
+      break;
+    case states.ENDED:
+      updateButtonText("Volver a Jugar");
+      break;
+  }
+}
+
+
+/**
+ * JUEGO FINALIZADO ---------------------------------------------------------------------------------------------------
+ */
+
+/**
+ * Funcion ejecutada cuando el usuario pierde.
+ * 
+ * Detiene timer.
+ * Detiene escuchas de teclas.
+ * Cambia estado actual de juego a ENDED.
+ * Muestra mensaje indicando razon de haber perdido.
+ */
+function userLost(reason) {
+
+  stopTimer();
+  stopShotKeys();
+  changePuzzleCurrentState(states.ENDED);
+
+  switch (reason) {
+    case loseReason.MOVEMENTS_LIMIT:
+    showMovementsLimitDialog();
+      break;
+    case loseReason.TIME_END:
+      showTimeEndAlert();
+      break;
+  }
+}
+
+/**
+ * Funcion ejecutada cuando el usuario gana.
+ * 
+ * Detiene timer.
+ * Detiene escuchas de teclas.
+ * Cambia estado actual de juego a ENDED.
+ * Muestra mensaje de usuario ganador.
+ */
+function userWon() {
+  stopTimer();
+  stopShotKeys();
+  changePuzzleCurrentState(states.ENDED);
+  showWinnerAlert();
+}
+
+
+/**
+ * Actualizacion de UI ----------------------------------------------------------------------------------------------------------
+ */
+
+ //Actualiza movimientos restantes en la UI. 
+function updateRemainingMovementsComponent() {
+  var remainingMovementsComponent = document.getElementById('remaining-movements');
+  remainingMovementsComponent.innerHTML = remainingMovements;
+}
+
+//Actualiza tiempo restante en la UI.
+function updateRemainingTimeComponent() {
+  var remainingTimeComponent = document.getElementById('remaining-time');
+  remainingTimeComponent.innerHTML = remainingTime;
+}
+
+/**
+ * Actualiza texto de boton de accion.
+ */
+function updateButtonText(newText) {
+  var button = document.getElementById('button-start');
+  button.value = newText;
+  button.innerHTML = newText;
+}
+
+function initLastMovement() {
+  lastMov = document.getElementById('last-movement');
+  lastMov.textContent = '-';
+}
+
+/* Actualiza la representación visual del último movimiento 
+en la pantalla, representado con una flecha. 
+*/
+function updateLastMovement(direction) {
+  lastMov = document.getElementById('last-movement');
+  switch (direction) {
+    case directionCodes.UP:
+      lastMov.textContent = '↑';
+      break;
+    case directionCodes.DOWN:
+      lastMov.textContent = '↓';
+      break;
+    case directionCodes.RIGHT:
+      lastMov.textContent = '→';
+      break;
+    case directionCodes.LEFT:
+      lastMov.textContent = '←';
+      break;
+  }
+}
+
+/* Esta función permite agregar una instrucción a la lista
+con idLista. Se crea un elemento li dinámicamente con el texto 
+pasado con el parámetro "instrucción". */
+function showInstructionsInList(instruction, listId) {
+  var ul = document.getElementById(listId);
+  var li = document.createElement("li");
+  li.textContent = instruction;
+  ul.appendChild(li);
+}
+
+
+/**
+ * Alertas - Dialogos -----------------------------------------------------------------------------------------------------------
+ */
+
+function showMovementsLimitDialog() {
+  showMsg("PERDISTE !!! \nLímite máximo de movimientos alcanzado.");
+}
+
+function showTimeEndAlert() {
+  showMsg("PERDISTE !!! \nLímite máximo de tiempo alcanzado.");
+}
+
+function showMsg(message) {
+  alert(message);
+}
+
+function showWinnerAlert() {
+  showMsg("GANASTE");
+}
+
+
+/**
+ * FUNCIONAMIENTO DEL JUEGO -----------------------------------------------------------------------------------------------------------
+ */
 
 /* Función que intercambia dos posiciones en la grilla.
 Pensar como intercambiar dos posiciones en un arreglo de arreglos. 
@@ -139,39 +469,24 @@ arreglo[0][0] = arreglo[1][2];
 En vez de intercambiar esos valores vamos a terminar teniendo en ambas posiciones el mismo valor.
 Se te ocurre cómo solucionar esto con una variable temporal?
 */
-//intercambiarPosicionesGrilla(filaPos1, columnaPos1, filaPos2, columnaPos2, pieza1, pieza2)
 function changePositionsGrid(rowPos1, columnPos1, rowPos2, columnPos2, item1, item2) {
   originalGrid[rowPos2][columnPos2] = item1;
   originalGrid[rowPos1][columnPos1] = item2;
 }
 
-// Actualiza la posición de la pieza vacía
-//actualizarPosicionVacia
+//Actualiza la posición de la pieza vacía
 function updateEmptyPosition(newRow, newColumn) {
     emptyRow = newRow;
     emptyColumn = newColumn;
 }
 
 
-// Para chequear si la posicón está dentro de la grilla.
-//posicionValida
-function correctPosition(row, column) {
-  //Se presupone que la grilla es una matriz cuadrada
-  if (row >= 0 && row < originalGrid.length && 
-    column >= 0 && column < originalGrid[row].length) {
-      return true;
-  }
-  return false;
-}
 
 /* Movimiento de fichas, en este caso la que se mueve es la blanca intercambiando su posición con otro elemento.
-Las direcciones están dadas por números que representa: arriba (38), abajo (40), izquierda (37), derecha (39) */
-//moverEnDireccion
+Las direcciones están dadas por números que representa: arriba (38), abajo (40), izquierda (37), derecha (39) 
+*/
 function moveInDirection(direction, isUserMovement) {
-  /*
-  var nuevaFilaPiezaVacia;
-  var nuevaColumnaPiezaVacia;
-  */
+  
   var newEmptyRowItem;
   var newEmptyColumnItem;
 
@@ -201,8 +516,8 @@ function moveInDirection(direction, isUserMovement) {
 
   /* A continuación se chequea si la nueva posición es válida, si lo es, se intercambia. 
   Para que esta parte del código funcione correctamente deberás haber implementado 
-  las funciones posicionValida, intercambiarPosicionesGrilla y actualizarPosicionVacia */
-
+  las funciones posicionValida, intercambiarPosicionesGrilla y actualizarPosicionVacia 
+  */
     if (correctPosition(newEmptyRowItem, newEmptyColumnItem)) {
 
         //Se verifica que el maximo de movimientos no se haya alcanzado
@@ -213,79 +528,19 @@ function moveInDirection(direction, isUserMovement) {
           addMovement(direction);
 
           if (isUserMovement) {
-            subtractMovement();  
+            removeMovement();  
           }
 
         } else {
-          lose(loseReason.MOVEMENTS_LIMIT);
+          userLost(loseReason.MOVEMENTS_LIMIT);
         }
     }
-}
-
-function showMovementsLimitAlert() {
-  alert("Límite máximo de movimientos alcanzado");
-}
-
-function showTimeEndAlert() {
-  alert("Tiempo finalizado");
-}
-
-/**
- * Click en boton.
- * Dependiendo el estado actual del juego (puzzleCurrentState),
- * el boton permite iniciar y reiniciar el juego.
- */
-function startButtonPressed() {
-  switch (puzzleCurrentState) {
-    case states.LOADED:
-      start();
-      break;
-    case states.STARTED:
-      reset();
-      break;
-    case states.ENDED:
-      reset();
-      break;
-  }
-}
-
-
-//////////////////////////////////////////////////////////
-////////A CONTINUACIÓN FUNCIONES YA IMPLEMENTADAS.////////
-/////////NO TOCAR A MENOS QUE SEPAS LO QUE HACES//////////
-//////////////////////////////////////////////////////////
-
-/* Las funciones y variables que se encuentran a continuación ya están implementadas.
-No hace falta que entiendas exactamente que es lo que hacen, ya que contienen
-temas aún no vistos. De todas formas, cada una de ellas tiene un comentario
-para que sepas que se está haciendo a grandes rasgos. NO LAS MODIFIQUES a menos que
-entiendas perfectamente lo que estás haciendo! */
-
-/* codigosDireccion es un objeto que te permite reemplazar
-el uso de números confusos en tu código. Para referirte a la dir
-izquierda, en vez de usar el número 37, ahora podés usar:
-codigosDireccion.IZQUIERDA. Esto facilita mucho la lectura del código. */
-/*
-var codigosDireccion = {
-    IZQUIERDA: 37,
-    ARRIBA: 38,
-    DERECHA: 39,
-    ABAJO: 40
-}
-*/
-var directionCodes = {
-  LEFT: 37,
-  UP: 38,
-  RIGHT: 39,
-  DOWN: 40
 }
 
 /* Funcion que realiza el intercambio logico (en la grilla) y ademas actualiza
 el intercambio en la pantalla (DOM). Para que funcione debera estar implementada
 la funcion intercambiarPosicionesGrilla() */
-//intercambiarPosiciones
 function changePositions(row1, column1, row2, column2) {
-  // Intercambio posiciones en la grilla
   var item1 = originalGrid[row1][column1];
   var item2 = originalGrid[row2][column2];
 
@@ -294,73 +549,27 @@ function changePositions(row1, column1, row2, column2) {
 }
 
 /* Intercambio de posiciones de los elementos del DOM que representan
-las fichas en la pantalla */
-//intercambiarPosicionesDOM
+las fichas en la pantalla 
+*/
 function changePositionsDOM(itemId1, itemId2) {
-  // Intercambio posiciones en el DOM
-  /*
-  var elementoPieza1 = document.getElementById(idPieza1);
-  var elementoPieza2 = document.getElementById(idPieza2);
-  */
- var item1 = document.getElementById(itemId1);
- var item2 = document.getElementById(itemId2);
 
-  //padre
+  // Intercambio posiciones en el DOM
+  var item1 = document.getElementById(itemId1);
+  var item2 = document.getElementById(itemId2);
+
   var parent = item1.parentNode;
 
-  /*
-  var clonElemento1 = elementoPieza1.cloneNode(true);
-  var clonElemento2 = elementoPieza2.cloneNode(true);
-  */
- var itemClon1 = item1.cloneNode(true);
- var itemClon2 = item2.cloneNode(true);
+  var itemClon1 = item1.cloneNode(true);
+  var itemClon2 = item2.cloneNode(true);
 
- /*
-  padre.replaceChild(clonElemento1, elementoPieza2);
-  padre.replaceChild(clonElemento2, elementoPieza1);
-  */
-
- parent.replaceChild(itemClon1, item2);
- parent.replaceChild(itemClon2, item1);
-
-}
-
-/* Actualiza la representación visual del último movimiento 
-en la pantalla, representado con una flecha. */
-//actualizarUltimoMovimiento
-function updateLastMovement(direction) {
-  lastMov = document.getElementById('last-movement');
-  switch (direction) {
-    case directionCodes.UP:
-      lastMov.textContent = '↑';
-      break;
-    case directionCodes.DOWN:
-      lastMov.textContent = '↓';
-      break;
-    case directionCodes.RIGHT:
-      lastMov.textContent = '→';
-      break;
-    case directionCodes.LEFT:
-      lastMov.textContent = '←';
-      break;
-  }
-}
-
-/* Esta función permite agregar una instrucción a la lista
-con idLista. Se crea un elemento li dinámicamente con el texto 
-pasado con el parámetro "instrucción". */
-//mostrarInstruccionEnLista
-function showInstructionsInList(instruction, listId) {
-  var ul = document.getElementById(listId);
-  var li = document.createElement("li");
-  li.textContent = instruction;
-  ul.appendChild(li);
+  parent.replaceChild(itemClon1, item2);
+  parent.replaceChild(itemClon2, item1);
 }
 
 /* Función que mezcla las piezas del tablero una cantidad de veces dada.
 Se calcula una posición aleatoria y se mueve en esa dirección. De esta forma
-se mezclará todo el tablero. */
-//mezclarPiezas
+se mezclará todo el tablero. 
+*/
 function mixItems(count) {
 
   if (count <= 0) {
@@ -379,144 +588,6 @@ function mixItems(count) {
       mixItems(count - 1);
     }, 100);
 }
-
-/* capturarTeclas: Esta función captura las teclas presionadas por el usuario. Javascript
-permite detectar eventos, por ejemplo, cuando una tecla es presionada y en 
-base a eso hacer algo. No es necesario que entiendas como funciona esto ahora, 
-en el futuro ya lo vas a aprender. Por ahora, sólo hay que entender que cuando
-se toca una tecla se hace algo en respuesta, en este caso, un movimiento */
-//capturarTeclas
-function shotKeys() {
-  document.body.onkeydown = (function(event) {
-    if (event.which === directionCodes.DOWN ||
-      event.which === directionCodes.UP ||
-      event.which === directionCodes.RIGHT ||
-      event.which === directionCodes.LEFT) {
-
-        if (puzzleCurrentState != states.ENDED) {
-          moveInDirection(event.which, true);
-        }
-
-        var won = checkIfWon();
-        if (won) {
-          setTimeout(function() {
-              showWinnerAlert();
-              }, 500);
-            }
-            event.preventDefault();
-        }
-    })
-}
-
-function stopShotKeys() {
-  document.body.onkeydown = null;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function load() {
-  initBoardValues();
-  updateRemainingMovementsComponent();
-  updateRemainingTimeComponent();
-  showInstructions(instructions);
-  changePuzzleCurrentState(states.LOADED);
-}
-
-function start() {
-  startTimer();
-  mixItems(30);
-  shotKeys();
-  changePuzzleCurrentState(states.STARTED);
-}
-
-function reset() {
-  stopShotKeys();
-  stopTimer();
-  initBoardValues();
-  resetMovements();
-  initMovementsArray();
-  updateRemainingMovementsComponent();
-  updateRemainingTimeComponent();
-  changePuzzleCurrentState(states.LOADED);
-}
-
-/**
- * Funcion ejecutada cuando el usuario pierde.
- * 0 -> 
- */
-function lose(reason) {
-  switch (reason) {
-    case loseReason.MOVEMENTS_LIMIT:
-      showMovementsLimitAlert();
-      break;
-    case loseReason.TIME_END:
-      showTimeEndAlert();
-      break;
-  }
-  changePuzzleCurrentState(states.ENDED);
-}
-
-function win() {
-  //todo
-}
-
-
-
-
-
-
-
-
-
-function updateRemainingMovementsComponent() {
-  var remainingMovementsComponent = document.getElementById('remaining-movements');
-  remainingMovementsComponent.innerHTML = remainingMovements;
-}
-
-function updateRemainingTimeComponent() {
-  var remainingTimeComponent = document.getElementById('remaining-time');
-  remainingTimeComponent.innerHTML = remainingTime;
-}
-
-
-function changePuzzleCurrentState(newState) {
-  puzzleCurrentState = newState;
-  switch (newState) {
-    case states.LOADED:
-      updateButtonText("Iniciar");
-      break;
-    case states.STARTED:
-      updateButtonText("Reiniciar");
-      break;
-    case states.ENDED:
-      updateButtonText("Volver a Jugar");
-      break;
-  }
-}
-
-function updateButtonText(newText) {
-  var button = document.getElementById('button-start');
-  button.value = newText;
-  button.innerHTML = newText;
-}
-
-
-load();
-
-
-
 
 /**
  * Se vuelven atras todos los movimientos.
@@ -550,22 +621,3 @@ function moveBack(mov) {
 
     moveInDirection(mBack, false);
 }
-
-
-
-
-
-/**
- * Codigo comentado q podria ser util
- */
-
- /*
-function orderOriginalGrid() {
-  //originalGrid = winnerGrid.slice;
-  for (var i = 0; i < winnerGrid.length; i++) {
-    for (var j = 0; j < winnerGrid[i].length; j++) {
-      originalGrid[i][j] = winnerGrid[i][j];
-    }
-  }
-}
-*/
