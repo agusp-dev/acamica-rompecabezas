@@ -274,7 +274,7 @@ function load() {
  * Cambia estado actual de juego a STARTED.
  */
 function start() {
-  mixItems(2);
+  mixItems(10);
   shotKeys();
   startTimer();
   changePuzzleCurrentState(states.STARTED);
@@ -439,19 +439,44 @@ function showInstructionsInList(instruction, listId) {
  */
 
 function showMovementsLimitDialog() {
-  showMsg("PERDISTE !!! \nLímite máximo de movimientos alcanzado.");
+  showAlert(false, "Alcanzaste el límite máximo de movimientos permitidos.");
 }
 
 function showTimeEndAlert() {
-  showMsg("PERDISTE !!! \nLímite máximo de tiempo alcanzado.");
-}
-
-function showMsg(message) {
-  alert(message);
+  showAlert(false, "Tu tiempo se agotó.");
 }
 
 function showWinnerAlert() {
-  showMsg("GANASTE");
+  showAlert(true, null);
+}
+
+function showAlert(won, msg) {
+
+  var alertContent = document.getElementById('puzzle-result-dialog');
+  var alert = document.getElementById('alert-content');
+  var img = document.getElementById('result-img');
+  var title = document.getElementById('result-title');
+  var msg = document.getElementById('result-msg');
+
+  var color;
+
+  if (won) {
+
+    /*
+    color = "rgba(255, 255, 191, 0.9)";
+    */
+
+  } else {
+
+    color = "rgba(238, 191, 191, 0.9)";
+    img.src = "images/win.png";
+
+
+
+  }
+
+  alert.style.backgroundColor = color;
+  alertContent.style.display ="block";
 }
 
 
