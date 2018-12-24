@@ -46,13 +46,13 @@ var directionCodes = {
 
 //Limite de movimientos.
 var MAX_MOVEMENTS = 20;
-var MAX_TIME = 30;
+var MAX_TIME = 120;
 
 //Arreglo que contiene las intrucciones del juego 
 var instructions = [
-  "Utilizá las flechas de tu teclado para mover las piezas y formar la imagen objetivo", 
-  "Tenés un límite de 20 movimientos y 5 minutos para resolver el rompecabezas.",
-  "Presioná el botón 'Iniciar' para comenzar a jugar y 'Resetear' para volver a comenzar"];
+  "Utilizá las flechas de tu teclado para mover las piezas y formar la imagen objetivo.", 
+  "Tenés un límite de " + MAX_MOVEMENTS + " movimientos y " + MAX_TIME + " segundos para resolver el rompecabezas.",
+  "Presioná el botón 'Iniciar' para comenzar a jugar y 'Reiniciar' para volver a comenzar."];
 
 // Arreglo para ir guardando los movimientos que se vayan realizando
 var movements = [];
@@ -274,7 +274,7 @@ function load() {
  * Cambia estado actual de juego a STARTED.
  */
 function start() {
-  mixItems(10);
+  mixItems(3);
   shotKeys();
   startTimer();
   changePuzzleCurrentState(states.STARTED);
@@ -439,44 +439,90 @@ function showInstructionsInList(instruction, listId) {
  */
 
 function showMovementsLimitDialog() {
-  showAlert(false, "Alcanzaste el límite máximo de movimientos permitidos.");
+  var message = "Alcanzaste el límite máximo de movimientos permitidos.";
+  showLoseAlert(message);
 }
 
 function showTimeEndAlert() {
-  showAlert(false, "Tu tiempo se agotó.");
+  var message = "Tu tiempo se agotó.";
+  showLoseAlert(message);
+}
+
+function showLoseAlert(message) {
+  var bColor = "rgba(238, 191, 191, 0.9)";
+  var fColor = "#ef5350";
+  var img = "images/lose.png";
+  var title = "¡PERDISTE!";
+  showCustomAlert(false, bColor, fColor, img, title, message);
 }
 
 function showWinnerAlert() {
-  showAlert(true, null);
+  var bColor = "rgba(186, 230, 225, 0.9)";
+  var fColor = "#009688";
+  var img = "images/win.png";
+  var title = "¡GANASTE!";
+  showCustomAlert(true, bColor, fColor, img, title, null);
 }
 
-function showAlert(won, msg) {
+function showCustomAlert(won, backgroundColor, fontColor, image, title, message) {
+  var domAlertContent = document.getElementById('puzzle-result-dialog');
+  var domAlert = document.getElementById('alert-content');
+  var domImg = document.getElementById('result-img');
+  var domTitle = document.getElementById('result-title');
+  var domMsg = document.getElementById('result-msg');
+  var domClose = document.getElementById('button-close');
+  domImg.src = image;
+  domTitle.textContent = title;
+  domTitle.style.color = fontColor;
 
-  var alertContent = document.getElementById('puzzle-result-dialog');
-  var alert = document.getElementById('alert-content');
-  var img = document.getElementById('result-img');
-  var title = document.getElementById('result-title');
-  var msg = document.getElementById('result-msg');
-
-  var color;
-
-  if (won) {
-
-    /*
-    color = "rgba(255, 255, 191, 0.9)";
-    */
-
-  } else {
-
-    color = "rgba(238, 191, 191, 0.9)";
-    img.src = "images/win.png";
-
-
-
+  //Hover
+  domClose.onmouseover = function() {
+    domClose.style.color = fontColor;
+  }
+  domClose.onmouseout = function() {
+    domClose.style.color = "#fff";
   }
 
-  alert.style.backgroundColor = color;
-  alertContent.style.display ="block";
+  if (won) {
+    domMsg.style.display = "none";
+  } else {
+    domMsg.textContent = message;
+    domMsg.style.color = fontColor;
+    domMsg.style.display = "block";
+  }
+  
+  domAlert.style.backgroundColor = backgroundColor;
+  domAlertContent.style.display = "block";
+
+  //Se deshabilita el boton de inicio de juego.
+  disableStartButton();
+}
+
+/**
+ *  Se habilita boton de inicio de juego.
+ */
+function enableStartButton() {
+  var button = document.getElementById('button-start');
+  button.disabled = false;
+}
+
+ /**
+  * Se deshabilita boton de inicio de juego.
+  */
+ function disableStartButton() {
+  var button = document.getElementById('button-start');
+  button.disabled = true;
+ }
+
+ /**
+  * Close dialog button pressed.
+  */
+ function closeDialogButtonPressed() {
+  var domAlertContent = document.getElementById('puzzle-result-dialog');
+  domAlertContent.style.display = "none";
+
+  //Se habilita nuevamente el boton de inicio de juego.
+  enableStartButton();
 }
 
 

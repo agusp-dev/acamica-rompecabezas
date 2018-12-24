@@ -1,7 +1,11 @@
 /*Código armado por La Foca Loca S.A. No modificar*/
 
 body {
+  /*
   font-family: Arial, sans-serif;
+  */
+  font-family: 'starcraft';
+  src: url(/fonts/starcraft.ttf);
   background-image: url(../images/adventure.jpg);
 }
 
@@ -30,10 +34,8 @@ Left Container --------------------------------------------------
 #left-panel {
   width: 100%;
   height: 100%;
-
   display: flex;
   flex-direction: column;
-  
 }
 
 #header {
@@ -49,12 +51,9 @@ Left Container --------------------------------------------------
 #body {
   flex: 1;
   background: rgba(0, 0, 0, 0.7);
-  
   padding: 20px 16px;
-
   display: flex;
   flex-direction: column;
-  
 }
 
 #instructions-container h2, #purpose-container h2 {
@@ -133,7 +132,11 @@ Body Container --------------------------------------------------
   display: table-cell;
   width: 620px;
   height: 620px;
-  background: rgba(238, 255, 255, 0.5);
+  /*
+  background-color: #ef5350;
+  */
+  background: rgba(239, 83, 80, 0.7);
+  
 }
 
 #puzzle-container {
@@ -255,6 +258,21 @@ Puzzle result dialog --------------------------------------------------
   color: #ef5350;
   font-size: 18px;
   margin-top: 4px;
+}
+
+#button-close {
+  height: 40px;
+  width: 40px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  text-align: center;
+  margin-top: 12px;
+  margin-right: 12px;
+  background-color: rgba(238, 191, 191, 0.1);
+  color: #fff;
+  font-weight: bold;
+  font-size: 30px;
 }
 
 @keyframes fadein {
