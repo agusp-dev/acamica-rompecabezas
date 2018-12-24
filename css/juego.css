@@ -1,9 +1,6 @@
 /*Código armado por La Foca Loca S.A. No modificar*/
 
 body {
-  /*
-  font-family: Arial, sans-serif;
-  */
   font-family: 'starcraft';
   src: url(/fonts/starcraft.ttf);
   background-image: url(../images/adventure.jpg);
@@ -96,7 +93,6 @@ li::before {
   width: 120px;
   height: 120px;
   border: 2px solid #fff;
-
   -webkit-transition: all .9s ease;
 }
 
@@ -132,11 +128,7 @@ Body Container --------------------------------------------------
   display: table-cell;
   width: 620px;
   height: 620px;
-  /*
-  background-color: #ef5350;
-  */
   background: rgba(239, 83, 80, 0.7);
-  
 }
 
 #puzzle-container {

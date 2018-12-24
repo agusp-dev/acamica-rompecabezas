@@ -27,11 +27,6 @@ var loseReason = {
   TIME_END: 1
 }
 
-//Cantidad maxima de movimientos.
-var max_movements_acount = 20;
-//Cantidad maxima de segundos.
-var timer_count = 30;
-
 /* codigosDireccion es un objeto que te permite reemplazar
 el uso de números confusos en tu código. Para referirte a la dir
 izquierda, en vez de usar el número 37, ahora podés usar:
@@ -46,7 +41,8 @@ var directionCodes = {
 
 //Limite de movimientos.
 var MAX_MOVEMENTS = 20;
-var MAX_TIME = 120;
+//Limite de tiempo.
+var MAX_TIME = 60;
 
 //Arreglo que contiene las intrucciones del juego 
 var instructions = [
@@ -274,7 +270,7 @@ function load() {
  * Cambia estado actual de juego a STARTED.
  */
 function start() {
-  mixItems(3);
+  mixItems(10);
   shotKeys();
   startTimer();
   changePuzzleCurrentState(states.STARTED);
@@ -341,7 +337,6 @@ function changePuzzleCurrentState(newState) {
  * Muestra mensaje indicando razon de haber perdido.
  */
 function userLost(reason) {
-
   stopTimer();
   stopShotKeys();
   changePuzzleCurrentState(states.ENDED);
@@ -515,7 +510,7 @@ function enableStartButton() {
  }
 
  /**
-  * Close dialog button pressed.
+  * Se presiona boton de cierre de alert.
   */
  function closeDialogButtonPressed() {
   var domAlertContent = document.getElementById('puzzle-result-dialog');
@@ -550,8 +545,6 @@ function updateEmptyPosition(newRow, newColumn) {
     emptyRow = newRow;
     emptyColumn = newColumn;
 }
-
-
 
 /* Movimiento de fichas, en este caso la que se mueve es la blanca intercambiando su posición con otro elemento.
 Las direcciones están dadas por números que representa: arriba (38), abajo (40), izquierda (37), derecha (39) 
